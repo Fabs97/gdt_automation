@@ -3,12 +3,13 @@
 from datetime import datetime, timedelta
 import locale
 from os import environ
-import requests
+from requests import get
 import holidays
 
 # Replace with your bot token and channel ID
-BOT_TOKEN = environ.get("BOT_TOKEN")
-CHANNEL_ID = environ.get("CHANNEL_ID")
+TOKEN = environ.get("BOT_TOKEN")
+CHAT_ID = environ.get("CHANNEL_ID")
+BASE_URL = f"https://api.telegram.org/bot{TOKEN}/"
 
 
 # Set the locale to Italian for date formatting
@@ -53,6 +54,50 @@ def get_upcoming_week_dates():
     return days
 
 
+def pin_message(message_id) -> dict | None:
+    """Pin a message given the message_id"""
+    if message_id is None:
+        return None
+
+    pinned_message = get(
+        f"{BASE_URL}pinChatMessage",
+        json={
+            "chat_id": CHAT_ID,
+            "message_id": message_id,
+            "disable_notification": True,
+        },
+        timeout=10,
+    )
+
+    return pinned_message.json().get("result", None)
+
+
+def unpin_message(message_id) -> dict | None:
+    """Unpin a message given the message_id"""
+    if message_id is None:
+        return None
+
+    unpinned_message = get(
+        f"{BASE_URL}unpinChatMessage",
+        json={
+            "chat_id": CHAT_ID,
+            "message_id": message_id,
+        },
+        timeout=10,
+    )
+
+    return unpinned_message.json().get("result", None)
+
+
+def get_last_pinned_message_id() -> int | None:
+    """Get the full chat response"""
+    response = get(f"{BASE_URL}getChat", json={"chat_id": CHAT_ID}, timeout=10)
+    pinned_message = response.json().get("result", {}).get("pinned_message", {})
+    message_id = pinned_message.get("message_id", None)
+
+    return message_id if pinned_message.get("poll", None) is not None else None
+
+
 def send_poll():
     """SENDS THE POLL"""
     # Poll details
@@ -60,11 +105,11 @@ def send_poll():
     options = get_upcoming_week_dates()
     options.append("Mai 🩵🩵")
     options.append("Forse 🥩🥩")
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPoll"
+    url = f"https://api.telegram.org/bot{TOKEN}/sendPoll"
 
     # Data to send the poll
     data = {
-        "chat_id": CHANNEL_ID,
+        "chat_id": CHAT_ID,
         "question": question,
         "options": options,
         "is_anonymous": False,  # Set to True if you want anonymous polls
@@ -73,19 +118,25 @@ def send_poll():
     }
 
     # Make the request
-    response = requests.post(url, json=data)
+    response = get(url, json=data, timeout=10)
 
     # Check for errors
     if response.status_code == 200:
-        print("Poll sent successfully!")
-    else:
-        print("Failed to send poll:", response.text)
+        return response.json()["result"]
+
+    return None
 
 
 # Run the function
 def main():
     """MAIN FUNCTION"""
-    send_poll()
+    last_pinned_message = get_last_pinned_message_id()
+    poll = send_poll()
+
+    if last_pinned_message is not None:
+        unpin_message(last_pinned_message)
+
+    pin_message(poll.get("message_id", None))
 
 
 if __name__ == "__main__":
