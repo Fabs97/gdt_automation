@@ -41,7 +41,7 @@ def get_upcoming_week_dates():
         )  # Format as "<day of week> <day>.<month>"
 
         formatted_date = (
-            f'{"🎉🎉" if is_bavarian_holiday else ""} {formatted_date}'  # Add holiday
+            f'{"🎉🎉 " if is_bavarian_holiday else ""}{formatted_date}'  # Add holiday
         )
 
         # add time of meetup
