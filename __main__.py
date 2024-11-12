@@ -105,7 +105,6 @@ def send_poll():
     options = get_upcoming_week_dates()
     options.append("Mai 🩵🩵")
     options.append("Forse 🥩🥩")
-    url = f"https://api.telegram.org/bot{TOKEN}/sendPoll"
 
     # Data to send the poll
     data = {
@@ -118,7 +117,7 @@ def send_poll():
     }
 
     # Make the request
-    response = get(url, json=data, timeout=10)
+    response = get(f"{BASE_URL}sendPoll", json=data, timeout=10)
 
     # Check for errors
     if response.status_code == 200:
