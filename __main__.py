@@ -32,9 +32,7 @@ def get_upcoming_week_dates():
     # Generate a list of formatted dates for each day of the week
     days = []
     for i in range(7):
-        date = start_of_week + timedelta(
-            days=i + 7
-        )  # Adding 7 days to start on next week
+        date = start_of_week + timedelta(days=i)
         is_bavarian_holiday = date in bavaria_holidays
         formatted_date = date.strftime(
             "%A %d.%m"
