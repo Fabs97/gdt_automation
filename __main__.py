@@ -54,7 +54,7 @@ def get_upcoming_week_dates():
     return days
 
 
-def pin_message(message_id) -> dict | None:
+def pin_message(message_id):
     """Pin a message given the message_id"""
     if message_id is None:
         return None
@@ -72,7 +72,7 @@ def pin_message(message_id) -> dict | None:
     return pinned_message.json().get("result", None)
 
 
-def unpin_message(message_id) -> dict | None:
+def unpin_message(message_id):
     """Unpin a message given the message_id"""
     if message_id is None:
         return None
@@ -89,7 +89,7 @@ def unpin_message(message_id) -> dict | None:
     return unpinned_message.json().get("result", None)
 
 
-def get_last_pinned_message_id() -> int | None:
+def get_last_pinned_message_id():
     """Get the full chat response"""
     response = get(f"{BASE_URL}getChat", json={"chat_id": CHAT_ID}, timeout=10)
     pinned_message = response.json().get("result", {}).get("pinned_message", {})
@@ -122,6 +122,8 @@ def send_poll():
     # Check for errors
     if response.status_code == 200:
         return response.json()["result"]
+    else:
+        print("Error sending poll:", response.status_code, response.text)
 
     return None
 
@@ -132,10 +134,9 @@ def main():
     last_pinned_message = get_last_pinned_message_id()
     poll = send_poll()
 
-    if last_pinned_message is not None:
+    if last_pinned_message is not None and poll is not None:
         unpin_message(last_pinned_message)
-
-    pin_message(poll.get("message_id", None))
+        pin_message(poll.get("message_id", None))
 
 
 if __name__ == "__main__":
